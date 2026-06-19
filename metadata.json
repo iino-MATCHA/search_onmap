@@ -1,0 +1,6 @@
+{
+  "name": "Search on the Map",
+  "description": "MATCHA Map Search App with polished Header, Bottom Navigation, and immersive background.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

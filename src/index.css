@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+@theme {
+  --color-matcha: #74A732;
+}
+
