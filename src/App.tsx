@@ -8,75 +8,57 @@ import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import CategoryResults from './components/CategoryResults';
 import { Tab } from './types';
-import { ChevronRight } from 'lucide-react';
 
-interface SearchCategory {
+// Small category: `id` is passed to CategoryResults unchanged (same click behavior as before)
+interface SmallCategory {
   id: string;
   title: {
     en: string;
     ja: string;
   };
-  description: {
+  image: string;
+}
+
+// Big category groups small categories on the landing page
+interface BigCategory {
+  id: string;
+  title: {
     en: string;
     ja: string;
   };
+  items: SmallCategory[];
 }
 
-const CATEGORIES: SearchCategory[] = [
+const COVER = 'https://gmibmhxozqkotdfkssac.supabase.co/storage/v1/object/public/items_img';
+
+const BIG_CATEGORIES: BigCategory[] = [
   {
-    id: 'Festivals',
-    title: {
-      en: 'Festivals',
-      ja: 'お祭り・地方行事'
-    },
-    description: {
-      en: 'Experience Japan’s vibrant culture through traditional Matsuri, featuring grand dance parades.',
-      ja: '伝統的なお祭りや熱気あふれる踊りを通じて、日本の活気ある文化を体験しましょう。'
-    }
+    id: 'nature',
+    title: { en: 'Nature', ja: '自然' },
+    items: [
+      { id: 'Onsen/Hot Spring', title: { en: 'Onsen', ja: '温泉' }, image: `${COVER}/onsen/21-kusatsu-onsen.webp` },
+      { id: 'Mountain', title: { en: 'Mountains', ja: '山・登山' }, image: `${COVER}/mountain/131-mt-fuji.webp` }
+    ]
   },
   {
-    id: 'Fire works',
-    title: {
-      en: 'Fire works',
-      ja: '花火大会'
-    },
-    description: {
-      en: 'Marvel at legendary Hanabi festival displays with massive artistic pyrotechnics.',
-      ja: '夜空を美しく染める、日本最高峰の大迫力な芸術的花火大会を巡りましょう。'
-    }
+    id: 'events',
+    title: { en: 'Events', ja: 'イベント' },
+    items: [
+      { id: 'Fire works', title: { en: 'Fireworks', ja: '花火大会' }, image: `${COVER}/fireworks/14-sumida-fireworks.webp` },
+      { id: 'Festivals', title: { en: 'Festivals', ja: 'お祭り' }, image: `${COVER}/festivals/2-akita-kanto.webp` }
+    ]
   },
   {
-    id: 'Onsen/Hot Spring',
-    title: {
-      en: 'Onsen/Hot Spring',
-      ja: '温泉・お風呂'
-    },
-    description: {
-      en: 'Relax in mineral-rich natural volcanic waters, nestled among beautiful nature.',
-      ja: '豊かな自然に囲まれた、日本全国の心も体も極上に癒やされる名湯・秘湯。'
-    }
+    id: 'food',
+    title: { en: 'Food', ja: 'グルメ' },
+    items: [
+      { id: 'Sake', title: { en: 'Sake Breweries', ja: '酒蔵・日本酒' }, image: `${COVER}/sake/142-fushimi-sake.webp` }
+    ]
   },
   {
-    id: 'Mountain',
-    title: {
-      en: 'Mountains',
-      ja: '山・登山'
-    },
-    description: {
-      en: 'Conquer iconic peaks and sacred summits, from Mt. Fuji to alpine trails with breathtaking views.',
-      ja: '富士山から北アルプスまで、日本の名峰・霊峰を巡り、絶景の山歩きを楽しみましょう。'
-    }
-  },
-  {
-    id: 'Sake',
-    title: {
-      en: 'Sake Breweries',
-      ja: '酒蔵・日本酒'
-    },
-    description: {
-      en: 'Tour historic sake districts and breweries, tasting Japan’s finest rice wine at the source.',
-      ja: '歴史ある酒蔵の街を巡り、名水が育んだ日本酒を蔵元で味わい尽くしましょう。'
-    }
+    id: 'culture',
+    title: { en: 'Culture', ja: '文化' },
+    items: []
   }
 ];
 
@@ -111,42 +93,61 @@ export default function App() {
               />
             </div>
           ) : (
-            <div className="w-full flex-1 pt-4 pb-8 flex flex-col overflow-y-auto">
-              {/* Title: Direct background-style typography without any box borders - smaller and pushed up to left */}
-              <div className="px-6 mb-3.5 max-w-2xl mx-auto w-full">
+            <div
+              className="w-full flex-1 pt-4 pb-10 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: 'none' }}
+            >
+              {/* Page title */}
+              <div className="px-6 mb-4 max-w-3xl mx-auto w-full">
                 <h1 className="text-base font-bold tracking-tight text-[#112A2E]/80 uppercase">
                   {lang === 'ja' ? '日本のマップから探す' : 'Search On Japanese Map'}
                 </h1>
               </div>
 
-              {/* Tap-friendly 100% width list container */}
-              <div className="w-full border-y border-gray-100 bg-white">
-                <div className="max-w-2xl mx-auto w-full">
-                  {CATEGORIES.map((category, index) => {
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => handleCategoryClick(category.id)}
-                        className="w-full flex items-center justify-between py-3 px-6 text-left transition-colors duration-150 hover:bg-slate-50/75 active:bg-slate-100/90 focus:outline-none focus:bg-slate-50 border-b border-gray-100 last:border-0 group cursor-pointer"
-                      >
-                        {/* Left: Text column containing title and description */}
-                        <div className="flex-1 pr-4">
-                          <h2 className="text-base font-semibold text-[#112A2E] group-hover:text-matcha transition-colors">
-                            {category.title[lang]}
-                          </h2>
-                          <p className="text-xs text-slate-500 mt-0.5 leading-snug">
-                            {category.description[lang]}
-                          </p>
+              {/* Big categories, each with a Netflix-style horizontal row of portrait cards */}
+              <div className="flex flex-col gap-7 max-w-3xl mx-auto w-full">
+                {BIG_CATEGORIES.map((big) => (
+                  <section key={big.id}>
+                    <h2 className="px-6 mb-2.5 text-lg font-extrabold text-[#112A2E] tracking-tight">
+                      {big.title[lang]}
+                    </h2>
+
+                    <div
+                      className="flex gap-3 overflow-x-auto px-6 pb-1.5 snap-x [&::-webkit-scrollbar]:hidden"
+                      style={{ scrollbarWidth: 'none' }}
+                    >
+                      {big.items.length > 0 ? (
+                        big.items.map((item) => (
+                          <button
+                            key={item.id}
+                            onClick={() => handleCategoryClick(item.id)}
+                            className="relative flex-shrink-0 w-32 aspect-[2/3] rounded-2xl overflow-hidden shadow-md snap-start group cursor-pointer ring-1 ring-black/5 transition-transform duration-300 hover:-translate-y-1 active:scale-[0.98]"
+                          >
+                            <img
+                              src={item.image}
+                              alt=""
+                              referrerPolicy="no-referrer"
+                              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-0 p-3">
+                              <h3 className="text-white text-sm font-bold leading-tight drop-shadow-md">
+                                {item.title[lang]}
+                              </h3>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        /* Empty big category (content coming later) */
+                        <div className="flex-shrink-0 w-32 aspect-[2/3] rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/60 flex items-center justify-center text-center px-2">
+                          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                            {lang === 'ja' ? '準備中' : 'Coming soon'}
+                          </span>
                         </div>
-                        
-                        {/* Right indicator mark */}
-                        <div className="text-slate-300 group-hover:text-matcha transition-colors flex-shrink-0">
-                          <ChevronRight className="w-4.5 h-4.5 stroke-[2.2]" />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      )}
+                    </div>
+                  </section>
+                ))}
               </div>
             </div>
           )
