@@ -11,10 +11,11 @@ import {
   ArrowLeft, 
   Loader, 
   AlertCircle, 
-  Compass, 
-  RefreshCw, 
+  Compass,
+  RefreshCw,
   Layers,
-  Settings
+  Settings,
+  ExternalLink
 } from 'lucide-react';
 
 // Assign Access Token
@@ -94,7 +95,8 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
   };
 
   const queryCategory = getCategoryQueryCode(categoryTitle);
-  const isOnsen = queryCategory === 'onsen';
+  // Categories without event dates: single list view, no month tabs (onsen / mountain / sake)
+  const isDateless = queryCategory === 'onsen' || queryCategory === 'mountain' || queryCategory === 'sake';
 
   const toggleVisited = (itemId: number) => {
     setVisitedIds(prev =>
@@ -123,10 +125,10 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
   // Current visible items for the active view
   const currentItems = React.useMemo(() => {
     if (!allCategoryItems) return [];
-    if (isOnsen) return allCategoryItems;
+    if (isDateless) return allCategoryItems;
     const monthStr = activeMonth.toString().padStart(2, '0');
     return allCategoryItems.filter(item => item.start_date?.startsWith(`${monthStr}-`));
-  }, [allCategoryItems, activeMonth, isOnsen]);
+  }, [allCategoryItems, activeMonth, isDateless]);
 
   const isLoading = loading;
   const isError = error;
@@ -154,7 +156,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
           setAllCategoryItems(fetchedItems);
 
           // Find the first month that has events if not onsen, to set it active
-          if (!isOnsen && fetchedItems.length > 0) {
+          if (!isDateless && fetchedItems.length > 0) {
             const firstMonthWithEvents = Array.from({ length: 12 }, (_, i) => i + 1).find(m => {
               const monthStr = m.toString().padStart(2, '0');
               return fetchedItems.some(item => item.start_date?.startsWith(`${monthStr}-`));
@@ -353,7 +355,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
     isScrollingRef.current = true;
 
     const el = document.getElementById(`item-card-${itemId}`);
-    const activeListContainer = document.getElementById(isOnsen ? 'list-container-onsen' : `list-container-month-${activeMonth}`);
+    const activeListContainer = document.getElementById(isDateless ? 'list-container-onsen' : `list-container-month-${activeMonth}`);
     if (el && activeListContainer) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -500,6 +502,12 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
     if (raw === 'fire works' || raw === 'fireworks') {
       return 'fireworks';
     }
+    if (raw === 'mountain') {
+      return 'mountains';
+    }
+    if (raw === 'sake') {
+      return 'breweries';
+    }
     return 'spots';
   };
 
@@ -536,7 +544,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
             <div className="w-2 h-2 rounded-full bg-matcha animate-pulse"></div>
             <span className="text-xs font-bold text-[#112A2E] tracking-tight">
               {categoryTitle}
-              {!isOnsen && (
+              {!isDateless && (
                 <>
                   <span className="mx-1">•</span>
                   <span className="text-slate-500">{lang === 'ja' ? `${activeMonth}月` : MONTHS[activeMonth-1]?.label}</span>
@@ -559,14 +567,14 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
             }
           `}</style>
 
-          {isOnsen ? (
+          {isDateless ? (
             /* Onsen View: Single compiled list of items (NO Monthly Horizontal Slider, NO month header tabs) */
             <div className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
               {isLoading ? (
                 <div className="flex-1 flex flex-col items-center justify-center gap-2 p-6 bg-slate-50/70">
                   <Loader className="w-5 h-5 text-matcha animate-spin" />
                   <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                    {lang === 'ja' ? '温泉データを読み込み中...' : 'Loading Hot Spring spots...'}
+                    {lang === 'ja' ? 'スポットを読み込み中...' : 'Loading spots...'}
                   </span>
                 </div>
               ) : isError ? (
@@ -584,7 +592,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-slate-50/90 select-none">
                   <Compass className="w-6 h-6 mb-1 text-slate-300 stroke-[1.5]" />
                   <h4 className="text-xs font-bold text-slate-600">
-                    {lang === 'ja' ? '温泉スポットが見つかりませんでした' : 'No hot spring spots found'}
+                    {lang === 'ja' ? 'スポットが見つかりませんでした' : 'No spots found'}
                   </h4>
                 </div>
               ) : (
@@ -937,6 +945,19 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
                 <div className="text-[11px] text-slate-500 leading-relaxed">
                   {getItemDesc(selectedModalItem)}
                 </div>
+
+                {/* MATCHA article link (shown only when matcha_link exists) */}
+                {selectedModalItem.matcha_link && (
+                  <a
+                    href={selectedModalItem.matcha_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-3 text-[11px] font-bold text-[#74A732] hover:text-[#639028] hover:underline transition-colors cursor-pointer"
+                  >
+                    {lang === 'ja' ? '詳しい記事はこちらから' : 'Read the full article'}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Wifi, Tag, Map, Gift, User } from 'lucide-react';
+import { Map, Search, Gamepad2, Home } from 'lucide-react';
 import { Tab } from '../types';
 
 interface BottomNavProps {
@@ -12,12 +12,12 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps) {
+  // tab: null = リンク先ページ未作成（押しても遷移しない）
   const navItems = [
-    { id: Tab.ESIM, label: 'eSIM', icon: Wifi },
-    { id: Tab.COUPONS, label: 'Coupons', icon: Tag },
-    { id: Tab.MY_JAPAN, label: 'My Japan', icon: Map },
-    { id: Tab.REFERRAL, label: 'Referral', icon: Gift },
-    { id: Tab.MY_PAGE, label: 'My Page', icon: User },
+    { key: 'my_japan', label: 'My Japan', icon: Map, tab: Tab.MY_JAPAN },
+    { key: 'search', label: 'Search', icon: Search, tab: null },
+    { key: 'games', label: 'Games', icon: Gamepad2, tab: null },
+    { key: 'home', label: 'Home', icon: Home, tab: null },
   ];
 
   return (
@@ -28,17 +28,17 @@ export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps)
       <div className="flex w-full justify-between items-center max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentTab === item.id;
+          const isActive = item.tab !== null && currentTab === item.tab;
           return (
             <button
-              key={item.id}
-              onClick={() => setCurrentTab(item.id)}
+              key={item.key}
+              onClick={() => { if (item.tab !== null) setCurrentTab(item.tab); }}
               className={`flex flex-col items-center justify-center py-1 flex-1 transition-all duration-200 relative cursor-pointer select-none ${
-                isActive 
-                  ? 'text-matcha scale-102 font-bold' 
+                isActive
+                  ? 'text-matcha scale-102 font-bold'
                   : 'text-gray-400 hover:text-slate-600'
               }`}
-              id={`nav-item-${item.id}`}
+              id={`nav-item-${item.key}`}
             >
               <div className={`p-1.5 rounded-full transition-all duration-200 ${
                 isActive ? 'bg-matcha/10' : 'bg-transparent'

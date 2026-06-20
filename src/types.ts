@@ -4,11 +4,7 @@
  */
 
 export enum Tab {
-  ESIM = 'esim',
-  COUPONS = 'coupons',
-  MY_JAPAN = 'my_japan',
-  REFERRAL = 'referral',
-  MY_PAGE = 'my_page'
+  MY_JAPAN = 'my_japan'
 }
 
 export interface SupabaseItem {
@@ -26,5 +22,6 @@ export interface SupabaseItem {
   prefecture_ja?: string;
   prefecture_en?: string;
   recommend?: boolean;
+  matcha_link?: string | null;
 }
 

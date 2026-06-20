@@ -22,8 +22,11 @@ export default function Header({ currentTab, setCurrentTab, lang, setLang }: Hea
         onClick={() => setCurrentTab(Tab.MY_JAPAN)}
         id="matcha-header-logo"
       >
-        <div className="w-5.5 h-5.5 rounded-full bg-matcha shadow-xs flex items-center justify-center animate-pulse" />
-        <span className="font-sans font-bold tracking-widest text-[#112A2E] text-lg">
+        <div
+          className="w-5.5 h-5.5 rounded-full shadow-xs flex items-center justify-center"
+          style={{ backgroundColor: '#9ACA3C' }}
+        />
+        <span className="font-sans font-bold tracking-tight text-[#1A1A1A] text-lg">
           MATCHA
         </span>
       </div>
@@ -54,11 +57,10 @@ export default function Header({ currentTab, setCurrentTab, lang, setLang }: Hea
           </button>
         </div>
 
-        <button 
+        <button
           id="header-user-btn"
           aria-label="User Profile"
           className="p-1 bg-white border border-gray-200 hover:border-[#112A2E] hover:text-matcha transition-colors text-[#112A2E] flex items-center justify-center rounded-full relative shadow-3xs cursor-pointer focus:outline-hidden"
-          onClick={() => setCurrentTab(Tab.MY_PAGE)}
         >
           <div className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center bg-[#FDFEFC]">
             <User className="w-4.5 h-4.5 text-[#112A2E] stroke-[1.8]" />

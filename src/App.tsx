@@ -55,6 +55,28 @@ const CATEGORIES: SearchCategory[] = [
       en: 'Relax in mineral-rich natural volcanic waters, nestled among beautiful nature.',
       ja: '豊かな自然に囲まれた、日本全国の心も体も極上に癒やされる名湯・秘湯。'
     }
+  },
+  {
+    id: 'Mountain',
+    title: {
+      en: 'Mountains',
+      ja: '山・登山'
+    },
+    description: {
+      en: 'Conquer iconic peaks and sacred summits, from Mt. Fuji to alpine trails with breathtaking views.',
+      ja: '富士山から北アルプスまで、日本の名峰・霊峰を巡り、絶景の山歩きを楽しみましょう。'
+    }
+  },
+  {
+    id: 'Sake',
+    title: {
+      en: 'Sake Breweries',
+      ja: '酒蔵・日本酒'
+    },
+    description: {
+      en: 'Tour historic sake districts and breweries, tasting Japan’s finest rice wine at the source.',
+      ja: '歴史ある酒蔵の街を巡り、名水が育んだ日本酒を蔵元で味わい尽くしましょう。'
+    }
   }
 ];
 
