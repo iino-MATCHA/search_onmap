@@ -7,6 +7,8 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import CategoryResults from './components/CategoryResults';
+import AnimeResults from './components/AnimeResults';
+import FoodResults, { FoodType } from './components/FoodResults';
 import { Tab } from './types';
 
 // Small category: `id` is passed to CategoryResults unchanged (same click behavior as before)
@@ -52,13 +54,17 @@ const BIG_CATEGORIES: BigCategory[] = [
     id: 'food',
     title: { en: 'Food', ja: 'グルメ' },
     items: [
+      { id: 'Ramen', title: { en: 'Ramen', ja: 'ラーメン' }, image: `${COVER}/_covers/ramen.jpg` },
+      { id: 'Wagashi', title: { en: 'Wagashi', ja: '和菓子' }, image: `${COVER}/_covers/wagashi.jpg` },
       { id: 'Sake', title: { en: 'Sake Breweries', ja: '酒蔵・日本酒' }, image: `${COVER}/sake/142-fushimi-sake.webp` }
     ]
   },
   {
     id: 'culture',
     title: { en: 'Culture', ja: '文化' },
-    items: []
+    items: [
+      { id: 'Anime', title: { en: 'Anime', ja: 'アニメ聖地' }, image: `${COVER}/_covers/anime.jpg` }
+    ]
   }
 ];
 
@@ -86,11 +92,21 @@ export default function App() {
         {currentTab === Tab.MY_JAPAN ? (
           selectedCategory ? (
             <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col">
-              <CategoryResults 
-                categoryTitle={selectedCategory} 
-                onBack={() => setSelectedCategory(null)} 
-                lang={lang}
-              />
+              {selectedCategory === 'Anime' ? (
+                <AnimeResults onBack={() => setSelectedCategory(null)} lang={lang} />
+              ) : ['Ramen', 'Wagashi', 'Sake'].includes(selectedCategory) ? (
+                <FoodResults
+                  foodType={selectedCategory.toLowerCase() as FoodType}
+                  onBack={() => setSelectedCategory(null)}
+                  lang={lang}
+                />
+              ) : (
+                <CategoryResults
+                  categoryTitle={selectedCategory}
+                  onBack={() => setSelectedCategory(null)}
+                  lang={lang}
+                />
+              )}
             </div>
           ) : (
             <div
