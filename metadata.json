@@ -1,6 +1,6 @@
 {
-  "name": "Search on the Map",
-  "description": "MATCHA Map Search App with polished Header, Bottom Navigation, and immersive background.",
+  "name": "MATCHA | Discover Japan on the Map",
+  "description": "Explore Japan's festivals, fireworks, hot springs, sake, food and anime spots on an interactive map. A Japan travel guide for inbound visitors, by MATCHA.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
