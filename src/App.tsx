@@ -10,6 +10,7 @@ import CategoryResults from './components/CategoryResults';
 import AnimeResults from './components/AnimeResults';
 import FoodResults, { FoodType } from './components/FoodResults';
 import { Tab } from './types';
+import { cdn } from './lib/img';
 
 // Small category: `id` is passed to CategoryResults unchanged (same click behavior as before)
 interface SmallCategory {
@@ -140,9 +141,11 @@ export default function App() {
                             className="relative flex-shrink-0 w-32 aspect-[2/3] rounded-2xl overflow-hidden shadow-md snap-start group cursor-pointer ring-1 ring-black/5 transition-transform duration-300 hover:-translate-y-1 active:scale-[0.98]"
                           >
                             <img
-                              src={item.image}
+                              src={cdn(item.image, 400)}
                               alt=""
                               referrerPolicy="no-referrer"
+                              loading="lazy"
+                              decoding="async"
                               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />

@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { SupabaseItem } from '../types';
+import { cdn } from '../lib/img';
 import mapboxgl from 'mapbox-gl';
 import { 
   ArrowLeft, 
@@ -241,7 +242,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
         setSelectedModalItem(item);
       };
 
-      const imgUrl = item.img_url || '';
+      const imgUrl = cdn(item.img_url, 96) || '';
 
       // Embedded profile-cover styled image pin with dynamic rings
       markerEl.innerHTML = `
@@ -615,19 +616,21 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
                             handleMarkerClick(item.id);
                             setSelectedModalItem(item);
                           }}
-                          className={`bg-white rounded-xl p-3.5 flex gap-4 transition-all duration-300 cursor-pointer border select-none transform hover:translate-y-[-1px] ${
-                            isActive 
-                              ? 'border-[#74A732] ring-1 ring-[#74A732]/30 shadow-md scale-[1.012] bg-emerald-50/5' 
-                              : 'border-slate-100/90 hover:border-slate-200/95 shadow-3xs'
+                          className={`bg-white rounded-xl p-4 flex gap-4 transition duration-150 cursor-pointer border select-none touch-manipulation active:scale-[0.99] active:bg-slate-50 ${
+                            isActive
+                              ? 'border-[#74A732] ring-1 ring-[#74A732]/30 shadow-md bg-emerald-50/10'
+                              : 'border-slate-100/90 shadow-3xs'
                           }`}
                         >
                           {/* Left: cover image thumbnail */}
                           <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-150 flex-shrink-0 overflow-hidden flex items-center justify-center relative">
                             {item.img_url ? (
-                              <img 
-                                src={item.img_url}
+                              <img
+                                src={cdn(item.img_url, 200)}
                                 alt={getItemName(item)}
                                 referrerPolicy="no-referrer"
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = 'none';
@@ -862,10 +865,11 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
             {/* Top half (50%) - Picture */}
             <div className="h-1/2 w-full relative bg-slate-150 flex-shrink-0">
               {selectedModalItem.img_url ? (
-                <img 
-                  src={selectedModalItem.img_url} 
-                  alt={getItemName(selectedModalItem)} 
+                <img
+                  src={cdn(selectedModalItem.img_url, 800)}
+                  alt={getItemName(selectedModalItem)}
                   referrerPolicy="no-referrer"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               ) : (

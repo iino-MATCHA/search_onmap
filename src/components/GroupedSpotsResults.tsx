@@ -6,6 +6,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { ArrowLeft, Loader, AlertCircle, Compass } from 'lucide-react';
+import { cdn } from '../lib/img';
 
 // Assign Access Token
 mapboxgl.accessToken = (import.meta as any).env?.VITE_MAPBOX_ACCESS_TOKEN;
@@ -230,7 +231,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
         handleMarkerClick(spot.id);
         setSelectedModalSpot(spot);
       };
-      const imgUrl = spot.img_url || '';
+      const imgUrl = cdn(spot.img_url, 96) || '';
       markerEl.innerHTML = `
         <div class="relative flex items-center justify-center group">
           <div class="active-glow-ring absolute w-11 h-11 bg-[#74A732]/25 rounded-full scale-0 transition-transform duration-300 font-sans"></div>
@@ -299,7 +300,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
     if (activeSpotId === null || !mapRef.current) return;
     const obj = currentSpots.find(i => i.id === activeSpotId);
     if (obj && obj.lat != null && obj.lng != null) {
-      mapRef.current.flyTo({ center: [obj.lng, obj.lat], zoom: 5.2, speed: 0.4, curve: 1.4, essential: true });
+      mapRef.current.flyTo({ center: [obj.lng, obj.lat], zoom: 5.2, duration: 700, curve: 1.2, essential: true });
       highlightActiveMarker(activeSpotId);
     }
   }, [activeSpotId, currentSpots]);
@@ -494,7 +495,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
                 return (
                   <>
                     {img && (
-                      <img src={img} alt="" referrerPolicy="no-referrer" className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={cdn(img, 800)} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
                     )}
                     <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.7)_30%,rgba(0,0,0,0.28)_58%,transparent_84%)]" />
                   </>
@@ -528,13 +529,13 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
                       data-spot-card="true"
                       data-spot-id={spot.id}
                       onClick={() => { handleMarkerClick(spot.id); setSelectedModalSpot(spot); }}
-                      className={`bg-white rounded-xl p-3.5 flex gap-4 transition-all duration-300 cursor-pointer border select-none transform hover:translate-y-[-1px] ${
-                        isActive ? 'border-[#74A732] ring-1 ring-[#74A732]/30 shadow-md scale-[1.012] bg-emerald-50/5' : 'border-slate-100/90 hover:border-slate-200/95 shadow-3xs'
+                      className={`bg-white rounded-xl p-4 flex gap-4 transition duration-150 cursor-pointer border select-none touch-manipulation active:scale-[0.99] active:bg-slate-50 ${
+                        isActive ? 'border-[#74A732] ring-1 ring-[#74A732]/30 shadow-md bg-emerald-50/10' : 'border-slate-100/90 shadow-3xs'
                       }`}
                     >
                       <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-150 flex-shrink-0 overflow-hidden flex items-center justify-center relative">
                         {spot.img_url ? (
-                          <img src={spot.img_url} alt={getName(spot)} referrerPolicy="no-referrer" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
+                          <img src={cdn(spot.img_url, 200)} alt={getName(spot)} referrerPolicy="no-referrer" loading="lazy" decoding="async" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }} />
                         ) : (
                           <div className="w-full h-full bg-emerald-50/30 flex items-center justify-center text-matcha/50">
                             <Compass className="w-5 h-5 stroke-[1.2]" />
@@ -582,7 +583,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col relative w-full max-w-[420px] aspect-square transform scale-100 transition-all duration-300" onClick={(e) => e.stopPropagation()}>
             <div className="h-1/2 w-full relative bg-slate-150 flex-shrink-0">
               {selectedModalSpot.img_url ? (
-                <img src={selectedModalSpot.img_url} alt={getName(selectedModalSpot)} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                <img src={cdn(selectedModalSpot.img_url, 800)} alt={getName(selectedModalSpot)} referrerPolicy="no-referrer" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-emerald-50/40 flex flex-col items-center justify-center text-matcha/45">
                   <Compass className="w-10 h-10 stroke-[1.2]" />
