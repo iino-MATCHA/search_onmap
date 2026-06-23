@@ -25,6 +25,8 @@ export interface GroupedSpot {
   lng?: number;
   img_url?: string | null;
   featured?: boolean;                   // cross-cutting flag (e.g. Must-Try)
+  start_date?: string | null;           // optional event date (MM-DD)
+  end_date?: string | null;
 }
 
 interface GroupedSpotsResultsProps {
@@ -39,6 +41,7 @@ interface GroupedSpotsResultsProps {
   featured?: { id: string; label: { en: string; ja: string } }; // optional cross-cutting chip shown first
   hero?: (groupId: string) => { image?: string | null; description?: string | null } | null; // per-group hero (image + copy)
   background?: string | null; // one faint category image shared across all chips, behind the sheet
+  initialSpotId?: number | null; // when arriving from a Featured card: focus this spot + its group
 }
 
 // Some datasets contain mojibake in *_ja fields (C1 control / replacement / lone
@@ -52,7 +55,7 @@ const looksBroken = (s?: string) => {
   return false;
 };
 
-export default function GroupedSpotsResults({ lang, onBack, title, countNoun, visitedKey, loader, groupLabel, order, featured, hero, background }: GroupedSpotsResultsProps) {
+export default function GroupedSpotsResults({ lang, onBack, title, countNoun, visitedKey, loader, groupLabel, order, featured, hero, background, initialSpotId }: GroupedSpotsResultsProps) {
   const [spots, setSpots] = useState<GroupedSpot[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,7 +166,12 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
           if (fetched.length > 0) {
             let first: string;
             let firstSpot: GroupedSpot | undefined;
-            if (featured && fetched.some(s => s.featured)) {
+            const targetSpot = initialSpotId != null ? fetched.find(s => s.id === initialSpotId) : undefined;
+            if (targetSpot) {
+              // Arrived from a Featured card → focus that spot + its group.
+              first = targetSpot.group;
+              firstSpot = targetSpot;
+            } else if (featured && fetched.some(s => s.featured)) {
               first = featured.id;
               firstSpot = fetched.find(s => s.featured);
             } else {
@@ -453,8 +461,8 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
             <div className="w-10 h-1 rounded-full bg-slate-300" />
           </div>
 
-          {/* Chips — always visible */}
-          {!loading && !error && groupOrder.length > 0 && (
+          {/* Chips — shown when there is more than one group */}
+          {!loading && !error && groupOrder.length > 1 && (
             <div className="flex bg-transparent pb-2.5 px-4 overflow-x-auto gap-1.5 no-scrollbar flex-shrink-0 relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
               {groupOrder.map((gid) => {
                 const isSelected = activeGroup === gid;
@@ -550,6 +558,12 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
                               <span>{getPrefecture(spot)}</span>
                               <span>•</span>
                               <span className="text-matcha">{groupLabel(spot.group, lang)}</span>
+                              {spot.start_date && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-matcha font-mono">{spot.start_date}{spot.end_date ? ` ~ ${spot.end_date}` : ''}</span>
+                                </>
+                              )}
                               {isVisited && (
                                 <>
                                   <span>•</span>
@@ -602,6 +616,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
                 </h3>
                 <p className="text-[10px] text-white/85 font-bold mt-1 tracking-wide">
                   {groupLabel(selectedModalSpot.group, lang)}
+                  {selectedModalSpot.start_date ? ` ・ ${selectedModalSpot.start_date}${selectedModalSpot.end_date ? ` ~ ${selectedModalSpot.end_date}` : ''}` : ''}
                 </p>
               </div>
             </div>

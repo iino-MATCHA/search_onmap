@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
-import CategoryResults from './components/CategoryResults';
+import MapItemsResults from './components/MapItemsResults';
 import AnimeResults from './components/AnimeResults';
 import FoodResults, { FoodType } from './components/FoodResults';
 import { Tab } from './types';
@@ -173,7 +173,7 @@ export default function App() {
                   lang={lang}
                 />
               ) : (
-                <CategoryResults
+                <MapItemsResults
                   categoryTitle={selectedCategory}
                   onBack={() => setSelectedCategory(null)}
                   lang={lang}
