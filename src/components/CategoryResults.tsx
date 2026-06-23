@@ -26,6 +26,7 @@ interface CategoryResultsProps {
   categoryTitle: string;
   onBack: () => void;
   lang: 'en' | 'ja';
+  initialItemId?: number | null; // when arriving from a Featured card: focus this spot + its month
 }
 
 const MONTHS = [
@@ -43,7 +44,7 @@ const MONTHS = [
   { value: 12, label: 'Dec' },
 ];
 
-export default function CategoryResults({ categoryTitle, onBack, lang }: CategoryResultsProps) {
+export default function CategoryResults({ categoryTitle, onBack, lang, initialItemId }: CategoryResultsProps) {
   // Items organized dynamically by month number (1 - 12)
   const [activeMonth, setActiveMonth] = useState<number>(6); // Default to June (6) as baseline
   const [allCategoryItems, setAllCategoryItems] = useState<SupabaseItem[] | null>(null);
@@ -98,6 +99,15 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
   const queryCategory = getCategoryQueryCode(categoryTitle);
   // Categories without event dates: single list view, no month tabs (onsen / mountain / sake)
   const isDateless = queryCategory === 'onsen' || queryCategory === 'mountain' || queryCategory === 'sake';
+
+  // One faint category image shared behind the whole bottom panel (consistent across month tabs)
+  const STORAGE = 'https://gmibmhxozqkotdfkssac.supabase.co/storage/v1/object/public/items_img';
+  const categoryBg = ({
+    festivals: `${STORAGE}/festivals/2-akita-kanto.webp`,
+    fireworks: `${STORAGE}/fireworks/14-sumida-fireworks.webp`,
+    onsen: `${STORAGE}/onsen/21-kusatsu-onsen.webp`,
+    mountain: `${STORAGE}/mountain/131-mt-fuji.webp`
+  } as { [c: string]: string })[queryCategory];
 
   const toggleVisited = (itemId: number) => {
     setVisitedIds(prev =>
@@ -156,21 +166,27 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
           const fetchedItems = data || [];
           setAllCategoryItems(fetchedItems);
 
-          // Find the first month that has events if not onsen, to set it active
-          if (!isDateless && fetchedItems.length > 0) {
-            const firstMonthWithEvents = Array.from({ length: 12 }, (_, i) => i + 1).find(m => {
-              const monthStr = m.toString().padStart(2, '0');
-              return fetchedItems.some(item => item.start_date?.startsWith(`${monthStr}-`));
-            });
-            if (firstMonthWithEvents !== undefined) {
-              setActiveMonth(firstMonthWithEvents);
-            }
-          }
+          // If we arrived from a Featured card, jump straight to that spot + its month tab.
+          const target = initialItemId != null ? fetchedItems.find(it => it.id === initialItemId) : undefined;
 
-          if (fetchedItems.length > 0) {
-            setActiveItemId(fetchedItems[0].id);
+          if (target) {
+            if (!isDateless && target.start_date) {
+              const m = parseInt(target.start_date.split('-')[0], 10);
+              if (m >= 1 && m <= 12) setActiveMonth(m);
+            }
+            setActiveItemId(target.id);
           } else {
-            setActiveItemId(null);
+            // Otherwise default to the first month that has events (non-dateless categories)
+            if (!isDateless && fetchedItems.length > 0) {
+              const firstMonthWithEvents = Array.from({ length: 12 }, (_, i) => i + 1).find(m => {
+                const monthStr = m.toString().padStart(2, '0');
+                return fetchedItems.some(item => item.start_date?.startsWith(`${monthStr}-`));
+              });
+              if (firstMonthWithEvents !== undefined) {
+                setActiveMonth(firstMonthWithEvents);
+              }
+            }
+            setActiveItemId(fetchedItems.length > 0 ? fetchedItems[0].id : null);
           }
         }
       } catch (err: any) {
@@ -557,7 +573,20 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
 
         {/* Swipeable List Area: Custom Monthly Page View Bottom 55% */}
         <div className="h-[55%] min-h-[55%] max-h-[55%] w-full bg-slate-50 flex flex-col flex-shrink-0 flex-grow-0 overflow-hidden relative border-t border-slate-100">
-          
+
+          {/* Faint category background, shared across all month tabs (behind everything) */}
+          {categoryBg && (
+            <img
+              src={cdn(categoryBg, 800)}
+              alt=""
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover opacity-[0.22] pointer-events-none"
+              style={{ zIndex: -1 }}
+            />
+          )}
+
           <style>{`
             .no-scrollbar::-webkit-scrollbar {
               display: none !important;
@@ -600,7 +629,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
                 <div
                   id="list-container-onsen"
                   onScroll={handleListScroll}
-                  className="flex-1 overflow-y-auto bg-slate-50/50 flex flex-col min-h-0 no-scrollbar"
+                  className="flex-1 overflow-y-auto bg-transparent flex flex-col min-h-0 no-scrollbar"
                 >
                   <div className="w-full max-w-xl mx-auto px-6 pt-12 pb-48 flex flex-col gap-3.5">
                     {currentItems.map((item) => {
@@ -689,17 +718,17 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
             /* Non-Onsen View: Keep Month Tabs and Horizontal sliding viewport */
             <>
               {/* Monthly horizontal sliding Navigation indicators at the top of bottom card workspace */}
-              <div className="flex bg-slate-50 py-2.5 px-4 overflow-x-auto gap-1.5 no-scrollbar flex-shrink-0 z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex bg-transparent py-2.5 px-4 overflow-x-auto gap-1.5 no-scrollbar flex-shrink-0 relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {MONTHS.map((m) => {
                   const isSelected = activeMonth === m.value;
                   return (
                     <button
                       key={m.value}
                       onClick={() => handleMonthChange(m.value)}
-                      className={`px-3 py-1 text-xs font-bold rounded-full min-w-[55px] text-center transition-all cursor-pointer ${
+                      className={`px-3 py-1 text-xs font-bold rounded-full min-w-[55px] text-center transition-all cursor-pointer shadow-3xs ${
                         isSelected
                           ? 'bg-matcha text-white shadow-xs'
-                          : 'bg-slate-200/50 text-slate-500 hover:text-slate-800'
+                          : 'bg-white/75 text-slate-600 hover:text-slate-900'
                       }`}
                     >
                       {lang === 'ja' ? `${m.value}月` : m.label}
@@ -759,7 +788,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang }: Categor
                         <div
                           id={`list-container-month-${m.value}`}
                           onScroll={handleListScroll}
-                          className="flex-1 overflow-y-auto bg-slate-50/50 flex flex-col min-h-0 no-scrollbar"
+                          className="flex-1 overflow-y-auto bg-transparent flex flex-col min-h-0 no-scrollbar"
                         >
                           <div className="w-full max-w-xl mx-auto px-6 pt-12 pb-48 flex flex-col gap-3.5">
 

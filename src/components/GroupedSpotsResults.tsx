@@ -38,6 +38,7 @@ interface GroupedSpotsResultsProps {
   order?: string[];                     // explicit chip order (group ids); falls back to count-desc
   featured?: { id: string; label: { en: string; ja: string } }; // optional cross-cutting chip shown first
   hero?: (groupId: string) => { image?: string | null; description?: string | null } | null; // per-group hero (image + copy)
+  background?: string | null; // one faint category image shared across all chips, behind the sheet
 }
 
 // Some datasets contain mojibake in *_ja fields (C1 control / replacement / lone
@@ -51,7 +52,7 @@ const looksBroken = (s?: string) => {
   return false;
 };
 
-export default function GroupedSpotsResults({ lang, onBack, title, countNoun, visitedKey, loader, groupLabel, order, featured, hero }: GroupedSpotsResultsProps) {
+export default function GroupedSpotsResults({ lang, onBack, title, countNoun, visitedKey, loader, groupLabel, order, featured, hero, background }: GroupedSpotsResultsProps) {
   const [spots, setSpots] = useState<GroupedSpot[] | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -429,6 +430,19 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
           className="absolute bottom-0 left-0 right-0 z-20 bg-slate-50 rounded-t-2xl shadow-[0_-8px_24px_rgba(0,0,0,0.13)] flex flex-col overflow-hidden"
           style={{ height: `${heightPct}%`, transition: dragging ? 'none' : 'height 0.3s ease' }}
         >
+          {/* Faint category background, shared across all chips (behind everything) */}
+          {background && (
+            <img
+              src={cdn(background, 800)}
+              alt=""
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 w-full h-full object-cover opacity-[0.22] pointer-events-none"
+              style={{ zIndex: -1 }}
+            />
+          )}
+
           {/* Grabber */}
           <div
             onPointerDown={onSheetDown}
@@ -441,15 +455,15 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
 
           {/* Chips — always visible */}
           {!loading && !error && groupOrder.length > 0 && (
-            <div className="flex bg-slate-50 pb-2.5 px-4 overflow-x-auto gap-1.5 no-scrollbar flex-shrink-0 z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex bg-transparent pb-2.5 px-4 overflow-x-auto gap-1.5 no-scrollbar flex-shrink-0 relative z-10" style={{ WebkitOverflowScrolling: 'touch' }}>
               {groupOrder.map((gid) => {
                 const isSelected = activeGroup === gid;
                 return (
                   <button
                     key={gid}
                     onClick={() => handleGroupChange(gid)}
-                    className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap text-center transition-all cursor-pointer ${
-                      isSelected ? 'bg-matcha text-white shadow-xs' : 'bg-slate-200/50 text-slate-500 hover:text-slate-800'
+                    className={`px-3 py-1 text-xs font-bold rounded-full whitespace-nowrap text-center transition-all cursor-pointer shadow-3xs ${
+                      isSelected ? 'bg-matcha text-white shadow-xs' : 'bg-white/75 text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     {labelFor(gid)}
@@ -486,29 +500,13 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
             </div>
           ) : (
             <div className="flex-1 relative overflow-hidden min-h-0">
-              {/* Hero image as the sheet background (large) + strong diagonal fade */}
-              {(() => {
-                const h = hero ? hero(activeGroup as string) : null;
-                const img = h?.image || null;
-                const desc = h?.description || null;
-                if (!img && !desc) return null;
-                return (
-                  <>
-                    {img && (
-                      <img src={cdn(img, 800)} alt="" referrerPolicy="no-referrer" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
-                    )}
-                    <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(0,0,0,0.94)_0%,rgba(0,0,0,0.7)_30%,rgba(0,0,0,0.28)_58%,transparent_84%)]" />
-                  </>
-                );
-              })()}
-
-              {/* Foreground: reserved description band (expanded only) + list below it (no overlap) */}
+              {/* Description band (expanded only) over the faint category background + list below */}
               <div className="relative z-10 flex flex-col h-full min-h-0">
                 {expanded && (() => {
                   const d = hero ? hero(activeGroup as string)?.description : null;
                   return d ? (
-                    <div className="flex-shrink-0 px-5 pt-4 pb-3">
-                      <p className="text-white text-xs sm:text-[13px] leading-relaxed font-medium drop-shadow-md max-w-[90%]">{d}</p>
+                    <div className="flex-shrink-0 px-5 pt-3 pb-2">
+                      <p className="text-[#112A2E]/90 text-xs sm:text-[13px] leading-relaxed font-medium max-w-[92%]">{d}</p>
                     </div>
                   ) : null;
                 })()}
@@ -516,7 +514,7 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
                   id="gs-list-container"
                   onScroll={handleListScroll}
                   className="flex-1 overflow-y-auto no-scrollbar min-h-0"
-                  style={{ paddingTop: expanded ? 6 : 84 }}
+                  style={{ paddingTop: expanded ? 4 : 10 }}
                 >
                   <div className="w-full max-w-xl mx-auto px-6 pb-48 flex flex-col gap-3.5">
                     {currentSpots.map((spot) => {

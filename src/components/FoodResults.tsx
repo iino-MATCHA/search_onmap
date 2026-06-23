@@ -81,6 +81,7 @@ export default function FoodResults({ foodType, onBack, lang }: FoodResultsProps
       featured={{ id: '__musttry__', label: { en: 'Must-Try', ja: '必食' } }}
       groupLabel={groupLabel}
       hero={hero}
+      background={rows[foodType]?.cover_image || null}
       loader={async () => {
         const { data, error } = await supabase.from('food_spots').select('*').eq('mid_category', foodType);
         if (error) throw error;

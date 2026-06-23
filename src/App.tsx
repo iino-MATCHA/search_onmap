@@ -103,6 +103,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [featured, setFeatured] = useState<Featured[]>([]);
+  const [targetItemId, setTargetItemId] = useState<number | null>(null);
 
   // Build the landing hero: this month's events + MATCHA picks, shuffled.
   useEffect(() => {
@@ -143,7 +144,8 @@ export default function App() {
     return () => { mounted = false; };
   }, []);
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryId: string, itemId: number | null = null) => {
+    setTargetItemId(itemId);
     setSelectedCategory(categoryId);
   };
 
@@ -175,6 +177,7 @@ export default function App() {
                   categoryTitle={selectedCategory}
                   onBack={() => setSelectedCategory(null)}
                   lang={lang}
+                  initialItemId={targetItemId}
                 />
               )}
             </div>
@@ -213,7 +216,7 @@ export default function App() {
                       return (
                         <button
                           key={f.id}
-                          onClick={() => handleCategoryClick(f.cardId)}
+                          onClick={() => handleCategoryClick(f.cardId, f.id)}
                           className="relative flex-shrink-0 w-[86%] sm:w-[400px] aspect-[16/10] rounded-3xl overflow-hidden snap-center shadow-lg ring-1 ring-black/5 group cursor-pointer transition-transform duration-150 active:scale-[0.98] touch-manipulation"
                         >
                           <img

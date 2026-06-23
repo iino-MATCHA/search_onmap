@@ -43,6 +43,7 @@ export default function AnimeResults({ onBack, lang }: AnimeResultsProps) {
       countNoun="spots"
       visitedKey="matcha_visited_anime"
       groupLabel={animeLabel}
+      background="https://gmibmhxozqkotdfkssac.supabase.co/storage/v1/object/public/items_img/_covers/anime.jpg"
       loader={async () => {
         const { data, error } = await supabase.from('anime_spots').select('*');
         if (error) throw error;
