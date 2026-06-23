@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
 import CategoryResults from './components/CategoryResults';
 import AnimeResults from './components/AnimeResults';
 import FoodResults, { FoodType } from './components/FoodResults';
 import { Tab } from './types';
+import { supabase } from './lib/supabase';
 import { cdn } from './lib/img';
 
 // Small category: `id` is passed to CategoryResults unchanged (same click behavior as before)
@@ -69,10 +70,78 @@ const BIG_CATEGORIES: BigCategory[] = [
   }
 ];
 
+// items.category -> the landing card id used for navigation to the map page
+const CATEGORY_TO_CARD: { [c: string]: string } = {
+  festivals: 'Festivals',
+  fireworks: 'Fire works',
+  onsen: 'Onsen/Hot Spring',
+  mountain: 'Mountain'
+};
+
+// Fallback cover per category (for this-month events that have no own image)
+const CATEGORY_COVER: { [c: string]: string } = {
+  festivals: `${COVER}/festivals/2-akita-kanto.webp`,
+  fireworks: `${COVER}/fireworks/14-sumida-fireworks.webp`,
+  onsen: `${COVER}/onsen/21-kusatsu-onsen.webp`,
+  mountain: `${COVER}/mountain/131-mt-fuji.webp`
+};
+
+// A spotlight card for the landing hero ("Featured Now")
+interface Featured {
+  id: number;
+  name_en: string;
+  name_ja: string;
+  prefecture_en: string;
+  prefecture_ja: string;
+  image: string;
+  cardId: string;
+  kind: 'pick' | 'month';
+}
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState<Tab>(Tab.MY_JAPAN);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [lang, setLang] = useState<'en' | 'ja'>('en');
+  const [featured, setFeatured] = useState<Featured[]>([]);
+
+  // Build the landing hero: this month's events + MATCHA picks, shuffled.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const mm = String(new Date().getMonth() + 1).padStart(2, '0');
+        const [picksRes, monthRes] = await Promise.all([
+          supabase.from('items').select('id,category,name_en,name_ja,prefecture_en,prefecture_ja,img_url,recommend').not('img_url', 'is', null),
+          supabase.from('items').select('id,category,name_en,name_ja,prefecture_en,prefecture_ja,img_url,start_date').like('start_date', `${mm}-%`)
+        ]);
+        const toFeatured = (r: any, kind: 'pick' | 'month'): Featured | null => {
+          const cardId = CATEGORY_TO_CARD[r.category];
+          const src = r.img_url || CATEGORY_COVER[r.category];
+          if (!cardId || !src) return null;
+          return {
+            id: r.id, name_en: r.name_en, name_ja: r.name_ja,
+            prefecture_en: r.prefecture_en, prefecture_ja: r.prefecture_ja,
+            image: cdn(src, 800) as string, cardId, kind
+          };
+        };
+        const picks = (picksRes.data || [])
+          .filter((r: any) => r.recommend === true || r.recommend === 'true')
+          .map((r: any) => toFeatured(r, 'pick'));
+        const months = (monthRes.data || []).map((r: any) => toFeatured(r, 'month'));
+        const seen = new Set<number>();
+        const pool = ([...months, ...picks].filter(Boolean) as Featured[])
+          .filter((f) => (seen.has(f.id) ? false : (seen.add(f.id), true)));
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        if (mounted) setFeatured(pool.slice(0, 6));
+      } catch {
+        /* hero is optional — ignore failures */
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -120,6 +189,60 @@ export default function App() {
                   {lang === 'ja' ? '日本のマップから探す' : 'Search On Japanese Map'}
                 </h1>
               </div>
+
+              {/* Featured hero: this month's events + MATCHA picks (shuffled). Tap → map page. */}
+              {featured.length > 0 && (
+                <div className="mb-8">
+                  <div className="px-6 mb-2.5 max-w-3xl mx-auto w-full flex items-baseline gap-2">
+                    <h2 className="text-lg font-extrabold text-[#112A2E] tracking-tight">
+                      {lang === 'ja' ? '✨ 今月の注目' : '✨ Featured Now'}
+                    </h2>
+                    <span className="text-[11px] text-slate-400 font-bold">
+                      {lang === 'ja' ? 'タップで地図へ' : 'Tap to open the map'}
+                    </span>
+                  </div>
+                  <div
+                    className="flex gap-4 overflow-x-auto px-6 pb-2 snap-x snap-mandatory max-w-3xl mx-auto w-full [&::-webkit-scrollbar]:hidden"
+                    style={{ scrollbarWidth: 'none' }}
+                  >
+                    {featured.map((f) => {
+                      const name = lang === 'ja' ? (f.name_ja || f.name_en) : (f.name_en || f.name_ja);
+                      const pref = lang === 'ja' ? (f.prefecture_ja || f.prefecture_en) : (f.prefecture_en || f.prefecture_ja);
+                      const isMonth = f.kind === 'month';
+                      const badge = isMonth ? (lang === 'ja' ? '今月開催' : 'This Month') : (lang === 'ja' ? 'MATCHAおすすめ' : "MATCHA's Pick");
+                      return (
+                        <button
+                          key={f.id}
+                          onClick={() => handleCategoryClick(f.cardId)}
+                          className="relative flex-shrink-0 w-[86%] sm:w-[400px] aspect-[16/10] rounded-3xl overflow-hidden snap-center shadow-lg ring-1 ring-black/5 group cursor-pointer transition-transform duration-150 active:scale-[0.98] touch-manipulation"
+                        >
+                          <img
+                            src={f.image}
+                            alt=""
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                          <span className={`absolute top-3 left-3 text-[10px] font-black uppercase tracking-wider text-white px-2.5 py-1 rounded-full shadow-sm ${isMonth ? 'bg-[#74A732]/95' : 'bg-rose-500/90'}`}>
+                            {badge}
+                          </span>
+                          <div className="absolute inset-x-0 bottom-0 p-4">
+                            <h3 className="text-white text-lg font-extrabold leading-tight drop-shadow-md line-clamp-2">{name}</h3>
+                            <div className="flex items-center justify-between mt-1.5 gap-2">
+                              <span className="text-white/90 text-[11px] font-bold truncate">📍 {pref}</span>
+                              <span className="flex-shrink-0 text-white text-[11px] font-bold inline-flex items-center gap-1 bg-white/15 backdrop-blur-xs px-2.5 py-1 rounded-full">
+                                {lang === 'ja' ? '地図で見る' : 'View on map'} →
+                              </span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Big categories, each with a Netflix-style horizontal row of portrait cards */}
               <div className="flex flex-col gap-7 max-w-3xl mx-auto w-full">
