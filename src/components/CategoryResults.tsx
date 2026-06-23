@@ -163,31 +163,7 @@ export default function CategoryResults({ categoryTitle, onBack, lang, initialIt
         }
 
         if (isMounted) {
-          const fetchedItems = data || [];
-          setAllCategoryItems(fetchedItems);
-
-          // If we arrived from a Featured card, jump straight to that spot + its month tab.
-          const target = initialItemId != null ? fetchedItems.find(it => it.id === initialItemId) : undefined;
-
-          if (target) {
-            if (!isDateless && target.start_date) {
-              const m = parseInt(target.start_date.split('-')[0], 10);
-              if (m >= 1 && m <= 12) setActiveMonth(m);
-            }
-            setActiveItemId(target.id);
-          } else {
-            // Otherwise default to the first month that has events (non-dateless categories)
-            if (!isDateless && fetchedItems.length > 0) {
-              const firstMonthWithEvents = Array.from({ length: 12 }, (_, i) => i + 1).find(m => {
-                const monthStr = m.toString().padStart(2, '0');
-                return fetchedItems.some(item => item.start_date?.startsWith(`${monthStr}-`));
-              });
-              if (firstMonthWithEvents !== undefined) {
-                setActiveMonth(firstMonthWithEvents);
-              }
-            }
-            setActiveItemId(fetchedItems.length > 0 ? fetchedItems[0].id : null);
-          }
+          setAllCategoryItems(data || []);
         }
       } catch (err: any) {
         console.error(`Supabase fetch error:`, err);
@@ -206,6 +182,27 @@ export default function CategoryResults({ categoryTitle, onBack, lang, initialIt
       isMounted = false;
     };
   }, [categoryTitle, retryCount]);
+
+  // 1b. Once items load, pick the initial active spot + month: the Featured target if one was
+  // passed (initialItemId), otherwise the first item / first month that has events.
+  useEffect(() => {
+    if (!allCategoryItems || allCategoryItems.length === 0) return;
+    const target = initialItemId != null ? allCategoryItems.find(it => it.id === initialItemId) : undefined;
+    const chosen = target || allCategoryItems[0];
+    if (!isDateless) {
+      if (target?.start_date) {
+        const m = parseInt(target.start_date.split('-')[0], 10);
+        if (m >= 1 && m <= 12) setActiveMonth(m);
+      } else {
+        const firstMonthWithEvents = Array.from({ length: 12 }, (_, i) => i + 1).find(mm => {
+          const ms = mm.toString().padStart(2, '0');
+          return allCategoryItems.some(it => it.start_date?.startsWith(`${ms}-`));
+        });
+        if (firstMonthWithEvents !== undefined) setActiveMonth(firstMonthWithEvents);
+      }
+    }
+    setActiveItemId(chosen.id);
+  }, [allCategoryItems, initialItemId, isDateless]);
 
   // 2. Initialize and Synchronize Mapbox Viewport and Markers for active items
   useEffect(() => {
