@@ -186,13 +186,6 @@ export default function App() {
               className="w-full flex-1 pt-4 pb-10 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: 'none' }}
             >
-              {/* Page title */}
-              <div className="px-6 mb-4 max-w-3xl mx-auto w-full">
-                <h1 className="text-base font-bold tracking-tight text-[#112A2E]/80 uppercase">
-                  {lang === 'ja' ? '日本のマップから探す' : 'Search On Japanese Map'}
-                </h1>
-              </div>
-
               {/* Featured hero: this month's events + MATCHA picks (shuffled). Tap → map page. */}
               {featured.length > 0 && (
                 <div className="mb-8">
@@ -246,6 +239,13 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {/* Page title (below the Featured section) */}
+              <div className="px-6 mb-4 max-w-3xl mx-auto w-full">
+                <h1 className="text-base font-bold tracking-tight text-[#112A2E]/80 uppercase">
+                  {lang === 'ja' ? '日本のマップから探す' : 'Search On Japanese Map'}
+                </h1>
+              </div>
 
               {/* Big categories, each with a Netflix-style horizontal row of portrait cards */}
               <div className="flex flex-col gap-7 max-w-3xl mx-auto w-full">
