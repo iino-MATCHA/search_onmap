@@ -9,6 +9,7 @@ import BottomNav from './components/BottomNav';
 import MapItemsResults from './components/MapItemsResults';
 import AnimeResults from './components/AnimeResults';
 import FoodResults, { FoodType } from './components/FoodResults';
+import MyJapanView from './myjapan/components/MyJapanView';
 import { Tab } from './types';
 import { supabase } from './lib/supabase';
 import { cdn } from './lib/img';
@@ -99,7 +100,7 @@ interface Featured {
 }
 
 export default function App() {
-  const [currentTab, setCurrentTab] = useState<Tab>(Tab.MY_JAPAN);
+  const [currentTab, setCurrentTab] = useState<Tab>(Tab.SEARCH);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [lang, setLang] = useState<'en' | 'ja'>('en');
   const [featured, setFeatured] = useState<Featured[]>([]);
@@ -161,7 +162,7 @@ export default function App() {
 
       {/* Main container: houses page content dynamically based on current tab */}
       <main className="flex-1 z-10 w-full flex flex-col min-h-0 overflow-hidden">
-        {currentTab === Tab.MY_JAPAN ? (
+        {currentTab === Tab.SEARCH ? (
           selectedCategory ? (
             <div className="flex-1 h-full min-h-0 overflow-hidden flex flex-col">
               {selectedCategory === 'Anime' ? (
@@ -183,7 +184,7 @@ export default function App() {
             </div>
           ) : (
             <div
-              className="w-full flex-1 pt-4 pb-10 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
+              className="w-full flex-1 pt-4 pb-28 flex flex-col overflow-y-auto [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: 'none' }}
             >
               {/* Featured hero: this month's events + MATCHA picks (shuffled). Tap → map page. */}
@@ -296,6 +297,11 @@ export default function App() {
               </div>
             </div>
           )
+        ) : currentTab === Tab.MY_JAPAN ? (
+          /* Integrated "My Japan" prefecture map (from the my-japan project) */
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col pb-[64px]">
+            <MyJapanView />
+          </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-slate-400">
             <span className="text-sm tracking-wide uppercase">

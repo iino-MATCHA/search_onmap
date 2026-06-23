@@ -2,5 +2,17 @@
 
 @theme {
   --color-matcha: #74A732;
+  --color-matcha-dark: #639028;
+  --color-matcha-light: #F0F9E6;
+  --color-dark-slate: #112A2E;
+  --color-dark-slate-light: #1D4349;
+  --color-soft-gray: #F5F7F8;
+  --color-border-gray: #EAEAEA;
 }
+
+/* Shared animations (used by both apps' views) */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+.animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 

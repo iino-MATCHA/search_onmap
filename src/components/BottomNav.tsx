@@ -15,7 +15,7 @@ export default function BottomNav({ currentTab, setCurrentTab }: BottomNavProps)
   // tab: null = リンク先ページ未作成（押しても遷移しない）
   const navItems = [
     { key: 'my_japan', label: 'My Japan', icon: Map, tab: Tab.MY_JAPAN },
-    { key: 'search', label: 'Search', icon: Search, tab: null },
+    { key: 'search', label: 'Search', icon: Search, tab: Tab.SEARCH },
     { key: 'games', label: 'Games', icon: Gamepad2, tab: null },
     { key: 'home', label: 'Home', icon: Home, tab: null },
   ];

@@ -4,7 +4,8 @@
  */
 
 export enum Tab {
-  MY_JAPAN = 'my_japan'
+  MY_JAPAN = 'my_japan',
+  SEARCH = 'search'
 }
 
 export interface SupabaseItem {
