@@ -224,6 +224,12 @@ export default function GroupedSpotsResults({ lang, onBack, title, countNoun, vi
       });
       mapRef.current = map;
       map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
+      // Tint the sea a soft light blue (default light style renders water grey)
+      const tintSea = () => {
+        try { map!.setPaintProperty('water', 'fill-color', '#CDE9F4'); } catch {}
+      };
+      map.on('style.load', tintSea);
+      if (map.isStyleLoaded()) tintSea();
     }
 
     (Object.values(markersRef.current) as mapboxgl.Marker[]).forEach(m => m.remove());
